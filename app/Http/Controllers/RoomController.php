@@ -15,23 +15,23 @@ class RoomController extends Controller
     }
 
     public function show(Room $room, Request $request)
-{
-    $weekOffset = (int) $request->query('week', 0);
-    $weeksToShow = (int) $request->query('weeks', 1);
+    {
+        $weekOffset = (int) $request->query('week', 0);
+        $weeksToShow = (int) $request->query('weeks', 1);
 
-    $startOfWeek = \Carbon\Carbon::now()->startOfWeek()->addWeeks($weekOffset);
-    $endOfWeek = $startOfWeek->copy()->addWeeks($weeksToShow - 1)->endOfWeek(); // ✅ ดึงหลายสัปดาห์
+        // ✅ หาวันเริ่มต้นของสัปดาห์ที่เลือก
+        $startOfWeek = Carbon::now()->startOfWeek()->addWeeks($weekOffset);
 
-    $bookings = $room->bookings()
-                    ->whereBetween('booking_date', [$startOfWeek, $endOfWeek]) 
-                    ->get();
+        // ✅ หาวันสุดท้ายของช่วงสัปดาห์ที่ต้องการ
+        $endOfWeek = $startOfWeek->copy()->addWeeks($weeksToShow - 1)->endOfWeek();
 
+        // ✅ ดึงรายการจองตามช่วงวันที่ของสัปดาห์ที่เลือก
+        $bookings = $room->bookings()
+            ->whereBetween('booking_date', [$startOfWeek->format('Y-m-d'), $endOfWeek->format('Y-m-d')])
+            ->get();
 
-    return view('rooms.show', compact(
-        'room', 'startOfWeek', 'endOfWeek', 'weekOffset', 'weeksToShow', 'bookings'
-    ));
+        return view('rooms.show', compact(
+            'room', 'startOfWeek', 'endOfWeek', 'weekOffset', 'weeksToShow', 'bookings'
+        ));
+    }
 }
-
-    
-}
-
